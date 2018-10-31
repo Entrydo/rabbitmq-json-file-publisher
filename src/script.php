@@ -3,10 +3,15 @@
 declare(strict_types=1);
 
 use Dotenv\Dotenv;
+use Nette\Utils\Json;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 
 require_once __DIR__ .'/../vendor/autoload.php';
+
+if ($argc !== 4) {
+	throw new InvalidArgumentException('Invalid usage: "php src/script.php <sourceFile> <queueName> <exchangeName>"');
+}
 
 $dotenv = new Dotenv(__DIR__ .'/../');
 $dotenv->load();
@@ -21,35 +26,24 @@ $connection = new AMQPStreamConnection(
 );
 $channel = $connection->channel();
 
-$queueName = $exchangeName ='send-sendgrid-transactional-mail';
+$filePath = $argv[1];
+$queueName = $argv[2];
+$exchangeName = $argv[3];
+
+$fileContent = file_get_contents($filePath);
+$data = Json::decode($fileContent);
 
 $channel->queue_bind($queueName, $exchangeName);
 
-$emails = [];
+foreach ($data as $index => $message) {
+	$msg = new AMQPMessage(Json::encode($message));
 
-$emails = array_map('trim', $emails);
-$emails = array_unique($emails);
-
-foreach ($emails as $email) {
-	$message = [
-		'templateId' => 'd-e252f1eaeaf2454d92a61f7cd259f4d8',
-		'eventId' => '0f160482-ca35-41f4-9d29-6b58caee9890',
-		'includeTicket' => 0,
-		'from' => [
-			'name' => 'AMSP ČR | Entry.do',
-			'mail' => 'hello@entry.do',
-		],
-		'to' => [
-			'name' => '',
-			'mail' => $email,
-		],
-	];
-
-	$msg = new AMQPMessage(json_encode($message));
 	$channel->basic_publish($msg, $exchangeName);
 
-	echo "[+] Published email to $email\n";
+	echo "[+] Message $index published\n";
 }
+
+echo "[x] Publishing finished\n";
 
 $channel->close();
 $connection->close();

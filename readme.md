@@ -1,15 +1,14 @@
 # Import to rabbit tool
 
 ## Purpose
-Load json file into RabbitMQ consumer 
+Publish data json file into RabbitMQ 
 
 ## Install
 1. Create `.env` file (use `.env.example` as template) 
 2. Install composer using `composer install`
-3. Run the script via `php src/script.php`
 
 ## Usage
-- `php src/script.php`
+- `php src/script.php <pathToJsonFile> <rabbitQueueName> <rabbitExchangeName>`
 
 ## TODO
 - [ ] Queue name as parameter
@@ -17,5 +16,6 @@ Load json file into RabbitMQ consumer
 - [ ] Phpstan
 - [ ] Coding standard
 - [ ] CI/CD ?
+- [ ] Composer package? -> would allow to be used in projects and/or separated as binary only
 - [ ] [CLImate](http://climate.thephpleague.com)? 
     - [ ] `--help` ?
